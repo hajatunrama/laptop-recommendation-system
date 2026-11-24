@@ -1,68 +1,52 @@
-# Sistem Rekomendasi Laptop — Streamlit
+# Sistem Rekomendasi Laptop Indonesia — Streamlit
 
-Aplikasi interaktif untuk proyek UTS Sistem Rekomendasi menggunakan **Content-Based Filtering**, **One-Hot Encoding**, **StandardScaler**, dan **Cosine Similarity**.
+Aplikasi demonstrasi Content-Based Filtering untuk katalog laptop Indonesia (100 produk). Aplikasi menggunakan One-Hot Encoding, StandardScaler, dan Cosine Similarity berdasarkan matriks fitur yang dibuat pada Google Colab.
 
-## Fitur
+## Struktur repository
 
-- Memilih jenis penggunaan laptop.
-- Menentukan anggaran maksimal, RAM minimum, dan penyimpanan minimum.
-- Mengatur target spesifikasi untuk menghitung kedekatan profil.
-- Menampilkan daftar rekomendasi dan skor cosine similarity.
-- Visualisasi skor dan hubungan harga dengan skor kemiripan.
-- Mengunduh hasil rekomendasi ke CSV.
-- Dataset demo 50.000 baris disertakan; pengguna dapat mengunggah CSV lengkap melalui sidebar.
+```text
+.
+├── app.py
+├── recommender.py
+├── requirements.txt
+├── README.md
+├── .streamlit/config.toml
+└── data/
+    ├── laptop_indonesia_featured.csv
+    ├── laptop_features_encoded.npz
+    └── feature_metadata.json
+```
 
 ## Jalankan secara lokal
 
-1. Pastikan Python 3.10 atau lebih baru terpasang.
-2. Ekstrak folder proyek.
-3. Buka terminal pada folder proyek, lalu jalankan:
-
-   ```bash
-   python -m venv .venv
-   ```
-
-4. Aktifkan environment:
-   - Windows PowerShell: `.venv\\Scripts\\Activate.ps1`
-   - macOS/Linux: `source .venv/bin/activate`
-5. Instal dependensi dan jalankan aplikasi:
-
-   ```bash
-   pip install -r requirements.txt
-   streamlit run app.py
-   ```
-
-6. Aplikasi akan terbuka di browser, biasanya pada `http://localhost:8501`.
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py
+```
 
 ## Deploy ke Streamlit Community Cloud
 
-1. Buat repository baru di GitHub.
-2. Unggah seluruh isi folder proyek ini ke repository (termasuk `data/laptop_demo_sample.csv` dan `.streamlit/config.toml`).
-3. Buka https://share.streamlit.io/ dan masuk menggunakan GitHub.
-4. Pilih **Create app**, lalu pilih repository, branch, dan file utama `app.py`.
-5. Klik **Deploy**. Streamlit akan memasang pustaka berdasarkan `requirements.txt`.
-6. Setelah aplikasi aktif, salin URL publik untuk dicantumkan dalam laporan UTS.
+1. Ekstrak ZIP ini.
+2. Buat repository GitHub baru.
+3. Upload **seluruh isi folder hasil ekstrak ke root repository**, termasuk folder `data/` dan `.streamlit/`.
+4. Buka https://share.streamlit.io/ dan login menggunakan GitHub.
+5. Pilih repository dan branch `main`.
+6. Isi **Main file path** dengan `app.py`, lalu deploy.
 
-## Menggunakan dataset lengkap
+## Cara kerja
 
-Aplikasi otomatis menggunakan sampel demo 50.000 baris saat pertama dibuka. Untuk analisis dataset penuh:
+1. Sistem memfilter kandidat berdasarkan anggaran maksimum, RAM minimum, storage minimum, dan jenis GPU jika pengguna menetapkannya sebagai syarat wajib.
+2. Sistem membangun vektor profil dari kategori pilihan serta target RAM, storage, dan ukuran layar.
+3. Sistem menghitung Cosine Similarity antara profil dan vektor fitur produk yang sudah diencoding.
+4. Hasil diurutkan berdasarkan similarity tertinggi.
+5. Listing dengan kombinasi merek dan spesifikasi yang sama dideduplikasi; bila ada beberapa listing identik, harga terendah diprioritaskan.
 
-1. Klik uploader **Unggah dataset CSV lengkap** di sidebar.
-2. Pilih `global_laptop_dataset_1.2M.csv`.
-3. Aplikasi hanya membaca kolom yang diperlukan model, bukan semua 18 kolom dataset.
+## Catatan metodologis
 
-Dataset penuh berukuran sekitar 114 MB. Pemrosesan file penuh memerlukan RAM lebih besar dan dapat lebih lambat pada hosting gratis. Untuk demo publik, sampel yang disertakan biasanya lebih ringan. Untuk hasil analisis final proyek, unggah dan jalankan dataset penuh pada mesin dengan RAM memadai.
-
-## Kolom dataset yang dibutuhkan
-
-`Usage_Type`, `RAM_GB`, `Storage_GB`, `Cores`, `Threads`, `Base_Clock`, `Boost_Clock`, `TDP`, `CPU_Performance`, `GPU_Performance`, `Price_USD`.
-
-## Catatan metodologi dan keterbatasan
-
-- Filter kandidat menggunakan jenis penggunaan, harga maksimal, RAM minimum, dan storage minimum.
-- `Usage_Type` diubah dengan One-Hot Encoding.
-- Fitur numerik distandardisasi menggunakan StandardScaler yang di-fit bertahap agar penggunaan memori lebih efisien.
-- Cosine Similarity digunakan untuk mengurutkan kandidat berdasarkan kedekatan vektor dengan profil pengguna.
-- Skor similarity bukan probabilitas atau metrik akurasi.
-- Dataset asal memiliki inkonsistensi pada beberapa pasangan merek/model laptop dan GPU. Karena itu, aplikasi hanya menampilkan kecocokan spesifikasi numerik dan tidak mengklaim nama produk sebagai rekomendasi pasar yang tervalidasi.
-- Mode awal menggunakan sampel acak 50.000 baris untuk demonstrasi. Unggah dataset lengkap untuk mereproduksi hasil pada keseluruhan CSV.
+- `Price_IDR` digunakan sebagai filter anggaran dan **tidak** masuk ke vektor Cosine Similarity.
+- Skor Cosine Similarity menunjukkan kemiripan vektor, bukan akurasi atau probabilitas pembelian.
+- Harga adalah snapshot sesuai `Checked_Date`, bukan harga real-time. Periksa ulang harga, stok, dan ketersediaan pada halaman penjual.
+- Dataset berisi 100 listing dari satu penjual; cakupannya belum mewakili semua laptop yang beredar di Indonesia.
